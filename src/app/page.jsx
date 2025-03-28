@@ -1,10 +1,28 @@
+"use client";
+
 import Image from "next/image";
 import {Roboto} from "next/font/google";
 import {Download, Upload} from "lucide-react"
+import {useState, useRef} from "react";
 
 const roboto = Roboto({subsets: ["latin"]});
 
 export default function Home() {
+    const [selectFile, setSelectFile] = useState(null);
+    const fileInputRef = useRef(null);
+
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectFile(file)
+        }
+    }
+
+    const checkFile = (file) => {
+        
+
+    }
+
     return (
         <main className={`flex flex-row w-screen h-screen justify-center items-center ${roboto.className}`}>
             <div className={`flex flex-col justify-items-center items-center`}>
@@ -20,7 +38,15 @@ export default function Home() {
                     <li>2. Download file.</li>
                 </ol>
                 <div className={`flex flex-row`}>
+                    <input
+                        type="file"
+                        accept="application/pdf"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className={`hidden`}
+                    />
                     <button
+                        onClick={() => fileInputRef.current.click()}
                         className={`flex flex-row items-center py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700`}>
                         <Upload className={`mr-1`}/>
                         Upload
