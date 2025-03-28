@@ -11,16 +11,20 @@ export default function Home() {
     const [selectFile, setSelectFile] = useState(null);
     const fileInputRef = useRef(null);
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const file = event.target.files[0];
-        if (file) {
+        const isPDF = await checkFile(file);
+        if (isPDF) {
             setSelectFile(file)
+        } else {
+            return alert("Por favor selecione um PDF");
         }
     }
 
-    const checkFile = (file) => {
-        
-
+    const checkFile = async (file) => {
+        const buffer = await file.slice(0, 5).arrayBuffer();
+        const header = new TextDecoder().decode(buffer);
+        return header.startsWith('%PDF');
     }
 
     return (
