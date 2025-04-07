@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import fs from "fs";
 import path from "path";
+import compress from "../../utils/compress.js";
 
 export async function POST(req) {
     try {
@@ -21,7 +22,11 @@ export async function POST(req) {
         const filePath = path.join(uploadDir, file.name);
         fs.writeFileSync(filePath, fileBuffer);
 
-        return NextResponse.json({message: "Upload bem-sucedido!", path: `/uploads/${file.name}`});
+        const compressedPath = await compress(filePath, file.name);
+
+        const fileNameBase = path.basename(compressedPath);
+
+        return NextResponse.json({message: "Upload bem-sucedido!", path: `/uploads/${fileNameBase}`});
     } catch (error) {
         console.error("Erro no upload:", error);
         return NextResponse.json({error: "Erro interno no servidor."}, {status: 500});

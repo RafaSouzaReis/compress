@@ -82,17 +82,17 @@ export default function Home() {
                         <Upload className="mr-1"/>
                         Upload
                     </button>
-
-                    <button
+                    <a
+                        href={fileUrl || "#"}
+                        download
                         className={`flex flex-row items-center text-white bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:focus:ring-red-900 ${
-                            selectFile ? "opacity-100 cursor-pointer hover:bg-red-800" : "opacity-30 cursor-not-allowed"
+                            fileUrl ? "opacity-100 cursor-pointer hover:bg-red-800" : "opacity-30 cursor-not-allowed pointer-events-none"
                         }`}
-                        disabled={!selectFile}
                         aria-label="Baixar arquivo comprimido"
                     >
                         <Download className="mr-1"/>
                         Download
-                    </button>
+                    </a>
                 </div>
             </div>
         </main>

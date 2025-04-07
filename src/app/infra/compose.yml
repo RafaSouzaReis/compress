@@ -1,0 +1,23 @@
+
+services:
+    app:
+        container_name: server
+        build:
+            context: ../../../  # Ajusta o contexto para a raiz do projeto
+            dockerfile: src/app/infra/Dockerfile
+        ports:
+            - "3000:3000"
+        environment:
+            - NODE_ENV=production
+        volumes:
+            - ../../../:/app
+            - /app/node_modules
+        depends_on:
+            - ghostscript
+        restart: unless-stopped
+
+    ghostscript:
+        image: alpine:latest
+        container_name: ghostscript
+        command: [ "sh", "-c", "apk add --no-cache ghostscript && tail -f /dev/null" ]
+        restart: unless-stopped
