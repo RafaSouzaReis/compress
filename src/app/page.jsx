@@ -10,8 +10,9 @@ const roboto = Roboto({subsets: ["latin"]});
 
 export default function Home() {
     const [selectFile, setSelectFile] = useState(null);
-    const [uploading, setUploading] = useState(false)
+    const [uploading, setUploading] = useState(false);
     const [fileUrl, setFileUrl] = useState("");
+    const [progress, setProgress] = useState(0);
     const fileInputRef = useRef(null);
 
     const handleFileChange = async (event) => {
@@ -27,7 +28,7 @@ export default function Home() {
 
     useEffect(() => {
         if (selectFile) {
-            handleUpload()
+            handleUpload();
         }
     }, [selectFile]);
 
@@ -35,6 +36,7 @@ export default function Home() {
         if (!selectFile) return;
 
         setUploading(true);
+        setProgress(0);
 
         const formData = new FormData();
         formData.append("file", selectFile);
@@ -42,17 +44,36 @@ export default function Home() {
         try {
             const response = await axios.post("/api/upload", formData, {
                 headers: {"Content-Type": "multipart/form-data"},
+                onUploadProgress: (progressEvent) => {
+                    const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setProgress(percent);
+                }
             });
+
             setFileUrl(response.data.path);
-            alert("upload realizado com sucesso!");
         } catch (error) {
             console.error("Erro no upload:", error);
             alert("Erro ao enviar o arquivo");
         } finally {
-            {
-                setUploading(false);
-            }
+            setUploading(false);
         }
+    };
+
+    if (uploading) {
+        return (
+            <main className="flex items-center justify-center h-screen w-screen bg-black-100">
+                <div className="text-center">
+                    <p className="text-xl font-semibold mb-4">Enviando arquivo...</p>
+                    <div className="w-64 h-4 bg-gray-300 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-red-600 transition-all duration-300"
+                            style={{width: `${progress}%`}}
+                        ></div>
+                    </div>
+                    <p className="mt-2">{progress}%</p>
+                </div>
+            </main>
+        );
     }
 
     return (
@@ -86,7 +107,9 @@ export default function Home() {
                         href={fileUrl || "#"}
                         download
                         className={`flex flex-row items-center text-white bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:focus:ring-red-900 ${
-                            fileUrl ? "opacity-100 cursor-pointer hover:bg-red-800" : "opacity-30 cursor-not-allowed pointer-events-none"
+                            fileUrl
+                                ? "opacity-100 cursor-pointer hover:bg-red-800"
+                                : "opacity-30 cursor-not-allowed pointer-events-none"
                         }`}
                         aria-label="Baixar arquivo comprimido"
                     >
