@@ -15,6 +15,9 @@ export default function Home() {
     const [progress, setProgress] = useState(0);
     const fileInputRef = useRef(null);
     const [darkMode, setDarkMode] = useState(false);
+    const [sizeKB, setSizeKB] = useState(0);
+    const [compressionRate, setCompressionRate] = useState(0);
+    const [finalSizeKB, setFinalSizeKB] = useState(0);
 
     const handleFileChange = async (event) => {
         const file = event.target.files?.[0];
@@ -22,6 +25,7 @@ export default function Home() {
 
         if (await checkFile(file)) {
             setSelectFile(file);
+            setSizeKB((file.size / 1024).toFixed(2));
         } else {
             alert("Por favor selecione um arquivo PDF válido.");
         }
@@ -42,6 +46,18 @@ export default function Home() {
     useEffect(() => {
         document.documentElement.classList.toggle("dark", darkMode);
         localStorage.setItem("theme", darkMode ? "dark" : "light");
+
+        // Atualiza favicon dinamicamente
+        const faviconHref = darkMode ? "/logo-red.svg" : "/logo-blue.svg";
+        let favicon = document.querySelector("link[rel~='icon']");
+
+        if (!favicon) {
+            favicon = document.createElement("link");
+            favicon.rel = "icon";
+            document.head.appendChild(favicon);
+        }
+
+        favicon.href = faviconHref;
     }, [darkMode]);
 
     const handleUpload = async () => {
@@ -59,9 +75,14 @@ export default function Home() {
                 onUploadProgress: (progressEvent) => {
                     const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                     setProgress(percent);
-                }
+                },
             });
 
+            const finalKB = parseFloat(response.data.finalSizeKB);
+            const originalKB = parseFloat(sizeKB);
+            setFinalSizeKB(finalKB);
+            const rate = (((originalKB - finalKB) / originalKB) * 100).toFixed(2);
+            setCompressionRate(rate);
             setFileUrl(response.data.path);
         } catch (error) {
             console.error("Erro no upload:", error);
@@ -73,16 +94,18 @@ export default function Home() {
 
     if (uploading) {
         return (
-            <main className="flex items-center justify-center h-screen w-screen bg-black-100">
+            <main className="flex items-center justify-center h-screen w-screen bg-gray-100 dark:bg-black">
                 <div className="text-center">
-                    <p className="text-xl font-semibold mb-4">Enviando arquivo...</p>
-                    <div className="w-64 h-4 bg-gray-300 rounded-full overflow-hidden">
+                    <p className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Enviando arquivo...</p>
+                    <div className="w-64 h-4 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-red-600 transition-all duration-300"
+                            className={`h-full transition-all duration-300 ${
+                                darkMode ? "bg-red-600" : "bg-blue-600"
+                            }`}
                             style={{width: `${progress}%`}}
                         ></div>
                     </div>
-                    <p className="mt-2">{progress}%</p>
+                    <p className="mt-2 text-gray-700 dark:text-gray-300">{progress}%</p>
                 </div>
             </main>
         );
@@ -97,8 +120,14 @@ export default function Home() {
             >
                 {darkMode ? <Sun/> : <Moon/>}
             </button>
+
             <div className="flex flex-col justify-items-center items-center">
-                <Image src={darkMode ? `/logo-red.svg` : `/logo-blue.svg`} alt="Logo PDF" width={100} height={100}/>
+                <Image
+                    src={darkMode ? `/logo-red.svg` : `/logo-blue.svg`}
+                    alt="Logo PDF"
+                    width={100}
+                    height={100}
+                />
                 <h1 className="text-4xl p-5">Compress</h1>
                 <ol className="pb-5 text-center">
                     <li>1. Upload file.</li>
@@ -116,24 +145,13 @@ export default function Home() {
 
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="
-                          flex flex-row items-center py-2.5 px-5 me-2 mb-2
-                          text-sm font-medium rounded-lg border focus:outline-none
-                          transition-colors duration-300
-
-                          bg-black text-white border-gray-200
-                          hover:bg-white hover:text-blue-600
-                          focus:ring-4 focus:ring-gray-100
-
-                          dark:bg-white dark:text-black dark:border-gray-600
-                          dark:hover:bg-black dark:hover:text-red-600
-                          dark:focus:ring-gray-700
-                        "
+                        className="flex flex-row items-center py-2.5 px-5 me-2 mb-2 text-sm font-medium rounded-lg border focus:outline-none transition-colors duration-300 bg-black text-white border-gray-200 hover:bg-white hover:text-blue-600 focus:ring-4 focus:ring-gray-100 dark:bg-white dark:text-black dark:border-gray-600 dark:hover:bg-black dark:hover:text-red-600 dark:focus:ring-gray-700"
                         aria-label="Fazer upload de arquivo PDF"
                     >
                         <Upload className="mr-1"/>
                         Upload
                     </button>
+
                     <a
                         href={fileUrl || "#"}
                         download
@@ -148,6 +166,25 @@ export default function Home() {
                         Download
                     </a>
                 </div>
+
+                {fileUrl && (
+                    <div className="mt-4 text-center text-sm text-gray-800 dark:text-gray-200">
+                        <p>Tamanho original: {sizeKB} KB</p>
+                        <p>Tamanho final: {finalSizeKB} KB</p>
+                        <p className="mt-2 text-gray-700 dark:text-gray-300">
+                            Taxa de compressão: {compressionRate}%
+                        </p>
+
+                        <div className="w-64 h-4 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full transition-all duration-300 ${
+                                    darkMode ? "bg-red-600" : "bg-blue-600"
+                                }`}
+                                style={{width: `${compressionRate}%`}}
+                            ></div>
+                        </div>
+                    </div>
+                )}
             </div>
         </main>
     );

@@ -20,13 +20,16 @@ export async function POST(req) {
         }
 
         const filePath = path.join(uploadDir, file.name);
+
         fs.writeFileSync(filePath, fileBuffer);
 
         const compressedPath = await compress(filePath, file.name);
+        const stats = fs.statSync(compressedPath);
+        const finalSizeKB = (stats.size / 1024).toFixed(2);
 
         const fileNameBase = path.basename(compressedPath);
 
-        return NextResponse.json({message: "Upload bem-sucedido!", path: `/uploads/${fileNameBase}`});
+        return NextResponse.json({message: "Upload bem-sucedido!", path: `/uploads/${fileNameBase}`, finalSizeKB});
     } catch (error) {
         console.error("Erro no upload:", error);
         return NextResponse.json({error: "Erro interno no servidor."}, {status: 500});
